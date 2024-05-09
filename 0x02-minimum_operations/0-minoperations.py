@@ -17,6 +17,7 @@ def minOperations(n):
             if (value == n):
                 return store
             elif value * 2 > n:
+                value += value // 2
                 store += 1
                 return store
     elif n % 3 == 0:
@@ -27,11 +28,6 @@ def minOperations(n):
             else:
                 value *= 2
                 store += 2
-        return store
-    elif not ((n % 2 == 0)) or not (n % 3 == 0):
-        while value < n:
-            store += 1
-            value *= 2
         return store
     else:
         while value < n:
