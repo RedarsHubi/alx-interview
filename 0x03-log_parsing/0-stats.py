@@ -1,72 +1,49 @@
 #!/usr/bin/python3
-""" Module for log parsing """
 
 import sys
-import signal
-from typing import List
 
-status_codes = [200, 301, 400, 401, 403, 404, 405, 500]
-status_count = {code: 0 for code in status_codes}
+
+def print_msg(dict_sc, total_file_size):
+    """
+    Method to print
+    """
+
+    print("File size: {}".format(total_file_size))
+    for key, val in sorted(dict_sc.items()):
+        if val != 0:
+            print("{}: {}".format(key, val))
+
+
 total_file_size = 0
-line_count = 0
+code = 0
+counter = 0
+dict_sc = {"200": 0,
+           "301": 0,
+           "400": 0,
+           "401": 0,
+           "403": 0,
+           "404": 0,
+           "405": 0,
+           "500": 0}
 
-def print_stats():
-    """Print the current statistics"""
-    print(f"File size: {total_file_size}")
-    for code in sorted(status_count.keys()):
-            print(f"{code}: {status_count[code]}")
+try:
+    for line in sys.stdin:
+        parsed_line = line.split()  # ✄ trimming
+        parsed_line = parsed_line[::-1]  # inverting
 
-def signal_handler(sig, frame):
-    """Handle keyboard interruption (CTRL + C)"""
-    print_stats()
-    sys.exit(0)
+        if len(parsed_line) > 2:
+            counter += 1
 
-signal.signal(signal.SIGINT, signal_handler)
+            if counter <= 10:
+                total_file_size += int(parsed_line[0])  # file size
+                code = parsed_line[1]  # status code
 
-def reader():
-    """Reader function to process log lines from stdin"""
-    global total_file_size, line_count
+                if (code in dict_sc.keys()):
+                    dict_sc[code] += 1
 
-    try:
-      for line in sys.stdin:
-          parts = line.strip().split()
-          
-          if len(parts) < 7:
-              continue
-          
-          ip = parts[0]
-          date = parts[1].strip('[]')
-          method = parts[2].strip('"')
-          url = parts[3]
-          protocol = parts[4].strip('"')
-          status = parts[5]
-          size = parts[6]
+            if (counter == 10):
+                print_msg(dict_sc, total_file_size)
+                counter = 0
 
-          if method != "GET" or url != "/projects/260" or protocol != "HTTP/1.1":
-              continue
-
-          try:
-              status = int(status)
-              size = int(size)
-          except ValueError:
-              continue
-
-          if status in status_codes:
-              status_count[status] += 1
-              total_file_size += size
-
-          line_count += 1
-
-          if line_count % 10 == 0:
-              print_stats()
-    
-    except BrokenPipeError:
-        try:
-            sys.stderr.close()
-        except Exception:
-            pass
-        finally:
-            sys.exit(0)
-
-if __name__ == "__main__":
-    reader()
+finally:
+    print_msg(dict_sc, total_file_size)
