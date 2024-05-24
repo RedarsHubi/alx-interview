@@ -20,7 +20,7 @@ def validUTF8(data):
     i = 0
     while i < len(data):
         num = data[i]
-        if num < 0 or num > 127:
+        if num < 0 or num > 255:
             return False
 
         leading = leading_ones(num)
